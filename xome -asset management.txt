@@ -1,0 +1,168 @@
+xome -asset management
+from premarketing to sold state.
+auction.com is competetor
+appollo-acution happens but details flow back to xome. 
+
+asset come from multiple sources
+
+xome has 6 databases
+casecade transactions (actual txns and is the biggest database)
+casecade integration (Integration with exteanal api calls)
+casecade documents (stored asset documents)
+cascade rules (Workflow rules)
+cascade ods(reporting database with 24 hours delay)
+hangfile (queuing with appollo and vice versa)
+cascasde audit : audit the txns made to 100 plus tables of cascade txns
+
+all the above databases are maintained in azure SQl management instance with SQL jobs
+
+xpk: is a asset indentifier across the internal and external to the system
+
+cascade app mainly interacts with 3 databases a)txns b)documents c)rules
+
+user permissions are stored in tables users ,roles, user_roles
+
+Reports are from Ods database with SSRS and Powerbi,tableu  
+
+
+assets come/onboard to cascade from different systems .Cascade shares the information with external vendords as well 
+
+integration with appollo is file based mechanism and not API based
+
+In 2n vedio, client is asking all the logic should be in api than stored procedure to avoid redundancy
+
+RBAC: Role Based Access Control
+c2a : cascade system to apollo
+a2c: apollo system to cascade
+
+communication go from c2a through sftp files.
+
+ods database has 24hours delay of cascade system txns. 
+it pushes data to ods through SQL jobs. From ODS system BI(datawarehousing) team generate reports using tableu,ssrs ,powerbi.
+It also accepts data from pyramid system and push the data to MRC system through cascade system . So it cannot be just read only system of cascade, it has allow read-write 
+from pyramid system
+
+Based on change tracking enabled on the tables in cascade system , it pushes data to data lake system where
+finance reports are generated. Finance reports of cascade system  flow to data lake through ADF .
+
+In future, client want to remove ODS instead want real time reports.
+
+auditing of user actions to be implemented
+while on boarding the user, multiple roles need to be added .as of now one role can only be assigned.
+also , it is taking two tasks one to create merchant and another to user under the merchant.
+
+Also it would be better while creating the role, if would be better if system can show what are the screens 
+he has access to it.
+
+while adding the role, it seems it is attached to products(asset statuses) and Seller codes and investor groups
+that need to be explored.
+
+Currently all are categorized as merchant in the current system cascade1.0. 
+
+In current system ,roles are implemented using parent -child relationship.
+users who have parent and parent is assigned specific role and users of that parent inhirit the
+role permissions. Generally as a parent company name is selected as user and give the roles to that user and
+put the parent to the users, who ever wants to get assigned to that role.It is workaround following and need to be
+improved in cascad2.0.
+
+from cascade 1.0, using cdc(change data tracking) data is pushed from cascade to datalake using azure adf
+and from there finance reports are taken
+
+pyramid system is pushing assets to MRC through cascade. It using BI team to push the assets to ODC(Reports)
+and from there to cascade and then to MRC(Mr Cooper)
+
+ods(reporting)  to be deprecated in future. All the reports should come from data lake directly.
+then interaction with BI and pyramid need to be avoided by using APIs to cascade system.
+
+Merchant type : service provider
+
+A service provider can offer many services .In each service there can be many roles.
+Suppose Title closing: is a service, in that it can have multiple roles under that role.
+Roles have access to aspx pages and can do operations for assets assigned to the roles.
+roles decide which screen they can see and which tasks they can do.
+
+Merchant is onboarded first and the user get onboarded.
+
+as of now, there are 4 tyopes of active merchants are present.
+a)asset management company b)client c)service provider d) broker.
+there is confusion present between client and asset management company and broker
+
+emailed is unique in current system for users.
+does each company have different roles for given service provider?
+Audit trails for user actions to be implemented? client is expecting the audit to be implemented.
+
+Role is defined based on product type(foreclosure-trustee,shortsale,bankowned) and seller( seller codes/sub codes) 
+and investors.
+
+for example , a specific role in asset management company is defined for product type foreclosure-trustee and seller code 25c(that has assets oboarded assets to sell) and all investors.
+
+But it seems in later part of vedio, a part from role, filter criteria is on product type and seller codes and investor groups. As such role does not define the filter critera of product type and seller codes and investor groups.
+
+User can be set up using "portifolio+" . comes under portifolio+usersetup 
+In that again, internal users have access to all  the aseet types. But for external type
+need to select the asset and transaction type and sellet codes.
+
+sellers : one who rnings the asset into system . They can be lenders, mortgage service providers.
+
+
+currently pain point is roles and access to aspx pages are defined in UI but need to go through database.
+
+what about a role of service provider, broker or seller?
+
+difference between authentication and authorization. Autherization gives which screens user has access 
+while authentication allows users to login into the system.
+
+product types
+(short sale) -when owner(load taken person) could not pay the emi and asked bank to sell the property and settle the difference amount
+Foreclosure--As home owner defaulted while paying emi , bank took the rights on property and aution the asset at court house.
+newly 2nd foreclosure -- Exetending forclosure , Auction is done online instead at the court house as earlier attempt of offline foreclosure has failed.
+REO--As 2nd foreclosure has also failed, bank own this property and wants to sell the property
+traditional --Individual home owner sells the property and no bank lender is involved.
+
+A Asset is identified with main parameters a)Client type b)Product type(foreclosure,newlyforeclosure,reo) c)Transaction type
+Product type and Transaction Type looks similar but subtle difference is there.
+
+Pre-marketing phase of the asset(below are the tasks under it) : 
+--Assigning agent to asset
+--aviction
+--Title making
+
+Marketing:
+--taking photos and measurements of the asset 
+--and sent to Appollo .In Appollo it is displayed as awating for action
+
+Auction: 
+
+Post action
+--contact signing
+--agreement/negotiation
+--Execution
+
+Closing
+Amount wiring
+
+Foreclosure: It is a process when lender sets the auction to reclaim the outstanding amount from borrower when he defaults.
+as per legal process. In xoam, it is only to help the auction process that is conducted by bank. Bank gives this processes
+to third party vendor called "fore closure trustee".
+
+
+Asset goes - Foreclosed--> Newly Foreclosed-->REO(bank owned asset)
+
+In BRD , every topic is covered. Better to review BRD to get more understanding. 
+ 
+DB resource Ramanathan Interview:
+1.When a user is created a default role is assigned with predefined permissions. So in DB design table
+Role, a row need to be there with Default flag and in Role_features table, entries need to be there 
+for that role id.
+
+When Asset is created, Investor id is mapped and Investor belongs to Investor group
+It seems , Seller code is introduced to hide the actual seller details exposed to system user.  
+
+A service provider has one or multiple services(aviction,title,closing) to be provided. and each service has predefined roles.
+a user is added to that role.
+
+In case of Asset management company, role is directly related to company, whereas in case of Service provided, Role is related to Service provided
+by Service provider.
+
+
+
